@@ -1,11 +1,6 @@
-# rust ping
+# tamara: Herramienta para monitoreo ICMP
 
-[![Crates.io](https://img.shields.io/crates/v/ping.svg)](https://crates.io/crates/ping)
-[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-[![Docs](https://docs.rs/ping/badge.svg)](https://docs.rs/ping/)
-
-Ping function implemented in rust.
-
+La idea es tener la herraamienta con la mínima funcionalidad para verificar la disponibilidad de equipos con ICMP
 ## License
 
 This library contains codes from https://github.com/knsd/tokio-ping, which is licensed under either of

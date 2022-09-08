@@ -8,25 +8,19 @@ use socket2::{Domain, Protocol, Socket, Type};
 use crate::errors::{Error};
 use crate::packet::{EchoReply, EchoRequest, IpV4Packet, IcmpV4, IcmpV6, ICMP_HEADER_SIZE};
 
-const TOKEN_SIZE: usize = 24;
+const TOKEN_SIZE: usize = 32;
 const ECHO_REQUEST_BUFFER_SIZE: usize = ICMP_HEADER_SIZE + TOKEN_SIZE;
 type Token = [u8; TOKEN_SIZE];
 
-pub fn ping(addr: IpAddr, timeout: Option<Duration>, ttl: Option<u32>, ident: Option<u16>, seq_cnt: Option<u16>, payload: Option<&Token>) -> Result<(), Error> {
-    let timeout = match timeout {
-        Some(timeout) => Some(timeout),
-        None => Some(Duration::from_secs(4)),
-    };
+pub fn ping(addr: IpAddr, timeout: Duration, ttl: u32, seq_cnt: u16, payload: &Token) -> Result<(), Error> {
 
     let dest = SocketAddr::new(addr, 0);
     let mut buffer = [0; ECHO_REQUEST_BUFFER_SIZE];
 
-    let default_payload: &Token = &random();
-
     let request = EchoRequest {
-        ident: ident.unwrap_or(random()),
-        seq_cnt: seq_cnt.unwrap_or(1),
-        payload: payload.unwrap_or(default_payload),
+        ident: random(),
+        seq_cnt: seq_cnt,
+        payload: payload
     };
 
     let mut socket = if dest.is_ipv4() {
@@ -41,13 +35,13 @@ pub fn ping(addr: IpAddr, timeout: Option<Duration>, ttl: Option<u32>, ident: Op
         Socket::new(Domain::IPV6, Type::RAW, Some(Protocol::ICMPV6))?
     };
 
-    socket.set_ttl(ttl.unwrap_or(64))?;
+    socket.set_ttl(ttl)?;
 
-    socket.set_write_timeout(timeout)?;
+    socket.set_write_timeout(Some(timeout))?;
 
     socket.send_to(&mut buffer, &dest.into())?;
 
-    socket.set_read_timeout(timeout)?;
+    socket.set_read_timeout(Some(timeout))?;
 
     let mut buffer: [u8; 2048] = [0; 2048];
     socket.read(&mut buffer)?;

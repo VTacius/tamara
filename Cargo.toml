@@ -1,10 +1,10 @@
 [package]
-name = "ping"
-version = "0.4.0"
-authors = ["An Long <aisk1988@gmail.com>"]
+name = "tamara"
+version = "0.1.0"
+authors = ["Alexander Ortíz <vtacius@gmail.com>"]
 license = "MIT"
-description = "ICMP library"
-repository = "https://github.com/aisk/ping"
+description = "Herramienta de monitoreo ICMP"
+repository = "https://github.com/vtacius/tamara"
 edition = "2018"
 
 [dependencies]
