@@ -35,11 +35,26 @@ fn is_alive(objetivo :Objetivo) -> bool{
 
 fn main(){
 
-    let destino = "10.10.20.20";
-    let objetivo = Objetivo::new(&destino, 200);
-    if is_alive(objetivo){
-        println!("{:?} esta arriba", &destino)
-    } else {
-        println!("<> {:?} esta abajo", &destino)
+    let objetivos = vec![
+        String::from("10.10.20.20"), 
+        String::from("194.68.26.89"), 
+        String::from("7.7.7.7"), 
+        String::from("172.105.163.170"),
+        String::from("10.10.20.21"), 
+        String::from("8.8.8.5"), 
+        String::from("45.76.96.192"),
+        String::from("10.10.20.49"),
+        String::from("10.10.20.254"),
+        String::from("8.8.8.8")
+    ];
+
+    for destino in objetivos {
+        let objetivo = Objetivo::new(&destino, 200);
+        if is_alive(objetivo){
+            println!("{:?} esta arriba", &destino)
+        } else {
+            println!("<> {:?} esta abajo", &destino)
+        }
+
     }
 }

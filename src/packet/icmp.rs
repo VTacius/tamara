@@ -7,8 +7,6 @@ pub const HEADER_SIZE: usize = 8;
 pub enum Error {
     #[error("invalid size")]
     InvalidSize,
-    #[error("invalid packet")]
-    InvalidPacket,
 }
 
 pub struct IcmpV4;
@@ -57,35 +55,6 @@ impl<'a> EchoRequest<'a> {
 
         write_checksum(buffer);
         Ok(())
-    }
-}
-
-pub struct EchoReply<'a> {
-    pub ident: u16,
-    pub seq_cnt: u16,
-    pub payload: &'a [u8]
-}
-
-impl<'a> EchoReply<'a> {
-    pub fn decode<P: Proto>(buffer: &'a [u8]) -> Result<Self, Error> {
-        if buffer.as_ref().len() < HEADER_SIZE {
-            return Err(Error::InvalidSize)
-        }
-
-        let type_ = buffer[0];
-        let code = buffer[1];
-        if type_ != P::ECHO_REPLY_TYPE && code != P::ECHO_REPLY_CODE {
-            return Err(Error::InvalidPacket)
-        }
-
-        let ident = (u16::from(buffer[4]) << 8) + u16::from(buffer[5]);
-        let seq_cnt = (u16::from(buffer[6]) << 8) + u16::from(buffer[7]);
-
-        let payload = &buffer[HEADER_SIZE..];
-
-        Ok(EchoReply {
-            ident, seq_cnt, payload
-        })
     }
 }
 
