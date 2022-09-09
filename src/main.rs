@@ -1,4 +1,8 @@
-use std::{net::{IpAddr, Ipv4Addr}, time::Duration};
+use std::{net::{Ipv4Addr, IpAddr}, time::Duration};
+
+use ping::Resultado;
+
+//use log::{error};
 
 mod errors;
 mod packet;
@@ -15,7 +19,7 @@ impl Objetivo<'_> {
     fn new(destino :&str, timeout :u64) -> Objetivo {
         let addr: IpAddr = match destino.parse(){
             Ok(e)=> e,
-            Err(_)=> IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+            Err(_)=> IpAddr::V4( Ipv4Addr::new(127, 0, 0, 1)),
         };
         let timeout = Duration::from_millis(timeout);
         // Estos serán por ahora valores por defecto 
@@ -26,35 +30,48 @@ impl Objetivo<'_> {
 
 }
 
-fn is_alive(objetivo :Objetivo) -> bool{
-    match ping::ping(objetivo.addr, objetivo.timeout, objetivo.ttl, 1, objetivo.payload){
-        Ok(()) => {true},
-        Err(_) => {false},
+
+impl Objetivo<'_> {
+    fn check(&self, intentos :u16, puerto :u16) -> Resultado {
+        for i in 0..intentos {
+            match ping::ping(self.addr, self.timeout, self.ttl, i, self.payload, puerto){
+                Ok(r) => {
+                    return r;
+                },
+                Err(e) => {
+                    println!("> Para {} {:?}", self.addr.to_string(), e);
+                }
+            }
+
+        }
+        let destino = self.addr.to_string();
+        let resultado = Resultado{host: destino, arriba: false};
+        return resultado;
+
     }
+
 }
 
 fn main(){
 
     let objetivos = vec![
-        String::from("10.10.20.20"), 
-        String::from("194.68.26.89"), 
-        String::from("7.7.7.7"), 
-        String::from("172.105.163.170"),
-        String::from("10.10.20.21"), 
-        String::from("8.8.8.5"), 
-        String::from("45.76.96.192"),
-        String::from("10.10.20.49"),
-        String::from("10.10.20.254"),
-        String::from("8.8.8.8")
+        (String::from("10.10.20.20"), 33001),
+        (String::from("194.68.26.89"), 33002),
+        (String::from("7.7.7.7"), 33003),
+        (String::from("172.105.163.170"),33004),
+        (String::from("10.10.20.21"), 33005),
+        (String::from("8.8.8.5"), 33006),
+        (String::from("45.76.96.192"),33007),
+        (String::from("10.10.20.49"),33008),
+        (String::from("10.10.20.254"),33009),
+        (String::from("8.8.8.8"), 33010)
     ];
 
     for destino in objetivos {
-        let objetivo = Objetivo::new(&destino, 200);
-        if is_alive(objetivo){
-            println!("{:?} esta arriba", &destino)
-        } else {
-            println!("<> {:?} esta abajo", &destino)
-        }
+        let dest = destino.0;
+        let objetivo = Objetivo::new(&dest, 200);
+        let resultado = objetivo.check( 3, destino.1);
+        println!("{}", resultado);
 
     }
 }
