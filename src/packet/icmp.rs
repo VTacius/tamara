@@ -1,13 +1,7 @@
-use thiserror::Error;
 use std::io::Write;
+use crate::errors::PaqueteCreacionError;
 
 pub const HEADER_SIZE: usize = 8;
-
-#[derive(Debug, Error)]
-pub enum Error {
-    #[error("invalid size")]
-    InvalidSize,
-}
 
 pub struct IcmpV4;
 pub struct IcmpV6;
@@ -40,7 +34,7 @@ pub struct EchoRequest<'a> {
 }
 
 impl<'a> EchoRequest<'a> {
-    pub fn encode<P: Proto>(&self, buffer: &mut [u8]) -> Result<(), Error> {
+    pub fn encode<P: Proto>(&self, buffer: &mut [u8]) -> Result<(), PaqueteCreacionError> {
         buffer[0] = P::ECHO_REQUEST_TYPE;
         buffer[1] = P::ECHO_REQUEST_CODE;
 
@@ -50,7 +44,7 @@ impl<'a> EchoRequest<'a> {
         buffer[7] = self.seq_cnt as u8;
 
         if let Err(_) = (&mut buffer[8..]).write(self.payload) {
-            return Err(Error::InvalidSize)
+            return Err(PaqueteCreacionError::InvalidSize)
         }
 
         write_checksum(buffer);

@@ -1,15 +1,15 @@
-use std::{net::{Ipv4Addr, IpAddr}, time::Duration};
+use std::{net::{Ipv4Addr}, time::Duration};
 
 use ping::Resultado;
 
-//use log::{error};
+use log::{debug};
 
 mod errors;
 mod packet;
 mod ping;
 
 struct Objetivo<'a> {
-    addr :IpAddr,
+    addr :Ipv4Addr,
     timeout :Duration,
     ttl :u32,
     payload :&'a[u8; 32]
@@ -17,9 +17,9 @@ struct Objetivo<'a> {
 
 impl Objetivo<'_> {
     fn new(destino :&str, timeout :u64) -> Objetivo {
-        let addr: IpAddr = match destino.parse(){
+        let addr: Ipv4Addr = match destino.parse(){
             Ok(e)=> e,
-            Err(_)=> IpAddr::V4( Ipv4Addr::new(127, 0, 0, 1)),
+            Err(_)=> Ipv4Addr::new(127, 0, 0, 1),
         };
         let timeout = Duration::from_millis(timeout);
         // Estos serán por ahora valores por defecto 
@@ -34,18 +34,18 @@ impl Objetivo<'_> {
 impl Objetivo<'_> {
     fn check(&self, intentos :u16, puerto :u16) -> Resultado {
         for i in 0..intentos {
-            match ping::ping(self.addr, self.timeout, self.ttl, i + 2, self.payload, puerto){
+            match ping::ping(self.addr, self.timeout, self.ttl, i, self.payload, puerto){
                 Ok(r) => {
                     return r;
                 },
                 Err(e) => {
-                    println!("> Para {} {:?}", self.addr.to_string(), e);
+                    debug!("> {} {}", self.addr.to_string(), e);
                 }
             }
 
         }
         let destino = self.addr.to_string();
-        let resultado = Resultado{host: destino, arriba: false};
+        let resultado = Resultado{host: destino, duracion: 0.0, arriba: false, ttl: 0};
         return resultado;
 
     }
@@ -53,7 +53,8 @@ impl Objetivo<'_> {
 }
 
 fn main(){
-
+    // Iniciamos el logger, que no podría faltar para una aplicación de este nivel
+    env_logger::init();
     let objetivos = vec![
         (String::from("10.10.20.20"), 33001),
         (String::from("194.68.26.89"), 33002),
