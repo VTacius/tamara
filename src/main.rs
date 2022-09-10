@@ -34,7 +34,7 @@ impl Objetivo<'_> {
 impl Objetivo<'_> {
     fn check(&self, intentos :u16, puerto :u16) -> Resultado {
         for i in 0..intentos {
-            match ping::ping(self.addr, self.timeout, self.ttl, i, self.payload, puerto){
+            match ping::ping(self.addr, self.timeout, self.ttl, i + 2, self.payload, puerto){
                 Ok(r) => {
                     return r;
                 },
@@ -62,6 +62,7 @@ fn main(){
         (String::from("10.10.20.21"), 33005),
         (String::from("8.8.8.5"), 33006),
         (String::from("45.76.96.192"),33007),
+        (String::from("1.1.1.1"), 33010),
         (String::from("10.10.20.49"),33008),
         (String::from("10.10.20.254"),33009),
         (String::from("8.8.8.8"), 33010)

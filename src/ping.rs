@@ -36,18 +36,46 @@ pub fn ping(addr: IpAddr, timeout: Duration, ttl: u32, seq_cnt: u16, payload: &T
     if request.encode::<IcmpV4>(&mut buffer[..]).is_err() {
         return Err(Error::InternalError.into());
     }
-    let mut socket = Socket::new(Domain::IPV4, Type::DGRAM, Some(Protocol::ICMPV4))?;
+    let mut socket = match Socket::new(Domain::IPV4, Type::RAW, Some(Protocol::ICMPV4)) {
+        Ok(s) => s,
+        Err(e) => {
+            println!("> Error creando el socket");
+            return Err(e.into());
+        }
+    };
 
-    socket.set_ttl(ttl)?;
+    if socket.set_ttl(ttl).is_err(){
+        println!("> Error configurando TTL");
+        return Err(Error::InternalError.into());
+    }
 
-    socket.set_write_timeout(Some(timeout))?;
+    if socket.set_write_timeout(Some(timeout)).is_err() {
+        println!("> Error configurando Timeout de escritura");
+        return Err(Error::InternalError.into());
+    }
 
-    socket.send_to(&mut buffer, &dest.into())?;
+    let _t_envio = match socket.send_to(&mut buffer, &dest.into()){
+        Ok(s) => s,
+        Err(e) => {
+            println!("> Error enviando paquetes");
+            return Err(e.into());
+        }
+    };
 
-    socket.set_read_timeout(Some(timeout))?;
+    if socket.set_read_timeout(Some(timeout)).is_err() {
+        println!("> Error configurando Timeout de lectura");
+        return Err(Error::InternalError.into());
+    };
 
-    let mut buffer: [u8; 2048] = [0; 2048];
-    socket.read(&mut buffer)?;
+    let mut buffer: [u8; 64] = [0; 64];
+    let _t_lectura = match socket.read(&mut buffer) {
+        Ok(l) => l,
+        Err(e) => {
+            println!("> Error leyendo paquetes");
+            return Err(e.into());
+        }
+    };
+    //println!("{:?}", buffer);
 
     return Ok(Resultado{host: addr.to_string(), arriba: true});
 }
