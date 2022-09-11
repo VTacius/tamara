@@ -14,3 +14,6 @@ thiserror = "1.0"
 rand = "0.8"
 log = "0.4.17"
 libc = "0.2.132"
+clap = { version = "3.2.20", features = ["derive"] }
+serde = { version = "1.0.144", features = ["derive"] }
+serde_yaml = "0.9.11"
