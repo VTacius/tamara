@@ -4,15 +4,29 @@ use std::io::{Read};
 use std::time::{Duration, Instant};
 
 use libc::sock_filter;
+use log::trace;
 use rand::random;
 use socket2::{Domain, Protocol, Socket, Type};
 
-use crate::errors::TamaraError;
-use crate::packet::{EchoRequest, IcmpV4, ICMP_HEADER_SIZE};
+use crate::icmp::TamaraError;
+use crate::icmp::{EchoRequest, IcmpV4, ICMP_HEADER_SIZE};
 
 const TOKEN_SIZE: usize = 32;
 const ECHO_REQUEST_BUFFER_SIZE: usize = ICMP_HEADER_SIZE + TOKEN_SIZE;
 type Token = [u8; TOKEN_SIZE];
+
+fn crear_filtros(addr: Ipv4Addr) -> Vec<sock_filter>{
+    let representacion :u32 = addr.into();
+    let filtros = vec![
+        libc::sock_filter{code: 48, jt: 0, jf: 0, k: 9},
+        libc::sock_filter{code: 21, jt: 0, jf: 3, k: 1},
+        libc::sock_filter{code: 32, jt: 0, jf: 0, k: 12},
+        libc::sock_filter{code: 21, jt: 0, jf: 1, k: representacion},
+        libc::sock_filter{code: 6, jt: 0, jf: 0, k: 262144},
+        libc::sock_filter{code: 6, jt: 0, jf: 0, k: 0},
+    ];
+    return filtros;
+}
 
 pub struct Resultado {
     pub host: String,
@@ -32,7 +46,8 @@ impl fmt::Display for Resultado {
 }
 
 impl Resultado {
-    fn new(addr: Ipv4Addr, arriba: bool, duracion :f64, datos: &[u8]) -> Resultado {
+    fn new(addr: Ipv4Addr, arriba: bool, duracion :Instant, datos: &[u8]) -> Resultado {
+        let duracion = (duracion.elapsed().as_micros() as f64) /1000.0;
         let ttl = match datos.get(8) {
            Some(v)  => *v,
            None => 0.into(),
@@ -74,20 +89,7 @@ pub fn ping(addr: Ipv4Addr, timeout: Duration, ttl: u32, seq_cnt: u16, payload: 
     
     socket.detach_filter()?;
     
-    let duracion = (ts_inicio.elapsed().as_micros() as f64) /1000.0;
-    let resultado = Resultado::new(addr, true, duracion, &buffer);
+    trace!("{:?}", buffer);
+    let resultado = Resultado::new(addr, true, ts_inicio, &buffer);
     return Ok(resultado);
-}
-
-fn crear_filtros(addr: Ipv4Addr) -> Vec<sock_filter>{
-    let representacion :u32 = addr.into();
-    let filtros = vec![
-        libc::sock_filter{code: 48, jt: 0, jf: 0, k: 9},
-        libc::sock_filter{code: 21, jt: 0, jf: 3, k: 1},
-        libc::sock_filter{code: 32, jt: 0, jf: 0, k: 12},
-        libc::sock_filter{code: 21, jt: 0, jf: 1, k: representacion},
-        libc::sock_filter{code: 6, jt: 0, jf: 0, k: 262144},
-        libc::sock_filter{code: 6, jt: 0, jf: 0, k: 0},
-    ];
-    return filtros;
 }

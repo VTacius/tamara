@@ -1,5 +1,6 @@
 use std::io::Write;
-use crate::errors::PaqueteCreacionError;
+
+use crate::icmp::PaqueteCreacionError;
 
 pub const HEADER_SIZE: usize = 8;
 
