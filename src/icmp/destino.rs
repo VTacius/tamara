@@ -10,12 +10,12 @@ pub struct Objetivo<'a> {
 }
 
 impl Objetivo<'_> {
-    pub fn new(destino :&str, timeout :u64) -> Objetivo {
+    pub fn new(destino :&str, timeout :i64) -> Objetivo {
         let addr: Ipv4Addr = match destino.parse(){
             Ok(e)=> e,
             Err(_)=> Ipv4Addr::new(127, 0, 0, 1),
         };
-        let timeout = Duration::from_millis(timeout);
+        let timeout = Duration::from_millis(timeout as u64);
         // Estos serán por ahora valores por defecto 
         let ttl = 254;
         let payload :&[u8; 32] = &[95, 32, 65, 32, 84, 97, 109, 97, 114, 97, 44, 32, 112, 111, 114, 32, 115, 97, 108, 118, 97, 114, 32, 109, 105, 32, 118, 105, 100, 97, 32, 95];

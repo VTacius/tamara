@@ -94,15 +94,6 @@ pub fn leer_configuracion_backend(opciones: &Opciones) -> Result<String, Opcione
     Ok(resultado)
 }
 
-pub fn leer_contenido_objetivos(ruta :&str) -> Result<Vec<Destino>, OpcionesError> {
-    let ruta = format!("{}/objetivos.yaml", ruta);
-    let fichero = File::open(ruta)?;
-    let lector = BufReader::new(fichero);
-    let destino :Vec<Destino> = serde_yaml::from_reader(lector)?;
-
-    return Ok(destino);
-}
-
 pub fn establecer_nivel_loggin(verbosidad: u8) -> LevelFilter {
     match verbosidad {
         1 => LevelFilter::Info,
