@@ -9,19 +9,27 @@ use crate::icmp::OpcionesError;
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 pub struct Opciones {
+    /// Nivel de verbosidad, acumulador (-vvv)
     #[clap(short, long, parse(from_occurrences))]
     pub verbosidad: u8,
 
-    #[clap(short, long, value_hint = clap::ValueHint::FilePath, validator = validar_fichero)]
-    pub listado: String,
+    /// Directorio donde se encuentran los ficheros de configuración
+    #[clap(short, long, value_hint = clap::ValueHint::DirPath, validator = validar_fichero)]
+    pub directorio_configuracion: String,
+
+    /// Si debe enviarse los resultados al backend
+    #[clap(short, long)]
+    pub enviar: bool
 }
 
 fn validar_fichero(name: &str) -> Result<(), String> {
     match Path::new(name).exists(){
         true => Ok(()),
-        false => Err(String::from("El fichero no existe"))
+        false => Err(String::from("El directorio no existe"))
     }
 }
+
+// Acá empiezan los esfuerzos para conseguir los objetivos sobre los cuales trabajar
 
 fn default_intentos() -> u16 {
     3
@@ -66,7 +74,28 @@ pub struct Destino {
     pub coordenadas: (f64, f64)
 }
 
-pub fn leer_contenido(ruta :&str) -> Result<Vec<Destino>, OpcionesError> {
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Backend {
+    pub host: String,
+    pub usuario: String, 
+    pub password: String,
+    pub dbname: String,
+}
+
+pub fn leer_configuracion_backend(opciones: &Opciones) -> Result<String, OpcionesError> {
+    let ruta = format!("{}//backend.yaml", opciones.directorio_configuracion);
+    let fichero = File::open(ruta)?;
+    let lector = BufReader::new(fichero);
+    let cfg :Backend = serde_yaml:: from_reader(lector)?;
+
+    // TODO: Implementar string o un objeto de configuración acorde a r2d2
+    let resultado = format!("host={} user={} password={} dbname={}", cfg.host, cfg.usuario, cfg.password, cfg.dbname);
+
+    Ok(resultado)
+}
+
+pub fn leer_contenido_objetivos(ruta :&str) -> Result<Vec<Destino>, OpcionesError> {
+    let ruta = format!("{}/objetivos.yaml", ruta);
     let fichero = File::open(ruta)?;
     let lector = BufReader::new(fichero);
     let destino :Vec<Destino> = serde_yaml::from_reader(lector)?;

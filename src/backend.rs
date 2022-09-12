@@ -41,7 +41,7 @@ pub enum TamaraBackendError {
 pub fn enviar_estado(conexion: Pool<PostgresConnectionManager<NoTls>>, estado :Estado) -> Result<u64, TamaraBackendError>{
     let mut cliente = conexion.get().unwrap();
 
-    let sentencia = "insert into estado(time, hostname, ttl, duracion, arriba) values($1, $2, $3, $4, $5)";
+    let sentencia = "insert into disponibilidad_icmp(time, hostname, ttl, duracion, arriba) values($1, $2, $3, $4, $5)";
     let resultado = cliente.execute(
         sentencia, 
         &[&estado.estampa, &estado.hostname, &estado.ttl, &estado.duracion, &estado.arriba]).unwrap();

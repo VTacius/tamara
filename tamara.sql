@@ -1,18 +1,20 @@
-CREATE TABLE servidor (
-    id serial PRIMARY KEY,
-    hostname TEXT NOT NULL,
-    lat DOUBLE PRECISION NULL,
-    lng DOUBLE PRECISION NULL);
+CREATE EXTENSION IF NOT EXISTS timescaledb;
+
+create table servidor( 
+    id serial PRIMARY KEY, 
+    hostname varchar(63), 
+    direccion INET, 
+    ubicacion POINT);
 
 CREATE INDEX servidor_hostname_idx ON servidor (hostname);
 
-CREATE TABLE estado (
+CREATE TABLE disponibilidad_icmp (
     time TIMESTAMPTZ NOT NULL,
-    hostname TEXT NOT NULL,
+    hostname varchar(63) NOT NULL,
     ttl SMALLINT NOT NULL,
     duracion DOUBLE PRECISION NOT NULL,
     arriba BOOLEAN NOT NULL);
 
-SELECT create_hypertable('estado', 'time');
+SELECT create_hypertable('disponibilidad_icmp', 'time');
 
-CREATE INDEX ix_symbol_time ON estado (hostname, time DESC);
+CREATE INDEX disponibilidad_icmp_time_idx ON disponibilidad_icmp (hostname, time DESC);

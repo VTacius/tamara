@@ -1,3 +1,4 @@
+use args::leer_configuracion_backend;
 use rayon::prelude::*;
 use std::time::SystemTime;
 
@@ -21,7 +22,7 @@ fn main(){
     builder_loggin.filter_level(nivel_logging).init();
 
     // Los objetivos los sacamos de un fichero yaml
-    let objetivos = match args::leer_contenido(&opciones.listado){
+    let objetivos = match args::leer_contenido_objetivos(&opciones.directorio_configuracion){
         Ok(v) => v,
         Err(e) => {
             errorlog!("{:?}", e);
@@ -29,8 +30,14 @@ fn main(){
         }
     };
 
-    // Hay que revisar con mayor detenimiento si esto de verdad ayuda
-    let conexion= "host=localhost user=postgres password=password";
+    // TODO: Revisar con mayor detenimiento si esto de verdad ayuda
+    let conexion= match leer_configuracion_backend(&opciones){
+        Ok(s) => s,
+        Err(e) => {
+            errorlog!("{:?}", e);
+            std::process::exit(1);
+        }
+    };
     let manager = r2d2_postgres::PostgresConnectionManager::new(conexion.parse().unwrap(), NoTls);
     let pool = r2d2::Pool::builder()
         .max_size(15)
@@ -46,12 +53,14 @@ fn main(){
         let resultado = objetivo.check( destino.cfg.intentos, 0);
 
         info!("{}", resultado);
-        let veredicto = if resultado.arriba { "arriba"} else { "abajo " };
-        let estado = backend::Estado::new(estampa, resultado);
+        if opciones.enviar {
+            let veredicto = if resultado.arriba { "arriba"} else { "abajo " };
+            let estado = backend::Estado::new(estampa, resultado);
 
-        match backend::enviar_estado(pool, estado) {
-           Ok(_) => info!("Se envio: {} {}", destino.ip, veredicto),
-           Err(e) => errorlog!("{:?}", e)
+            match backend::enviar_estado(pool, estado) {
+               Ok(_) => info!("Se envio: {} {}", destino.ip, veredicto),
+               Err(e) => errorlog!("{:?}", e)
+            }
         }
 
     });

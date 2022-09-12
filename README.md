@@ -49,3 +49,46 @@ time ./target/debug/tamara
 
 # Sobre como se piensa que entré en producción
 El script se correrá como un `cron`, quizá desde varias instancias que dejarán los datos en una mismo backend. De allí, faltará hacer una API, que incluso podría servir para otras aplicaciones, y quizá un pequeño mapa para mostrar los datos de forma amigable
+
+# Instrucciones para instalación en Debian 11
+
+## Instalar Timescaledb
+```bash
+apt install gnupg postgresql-common apt-transport-https wget
+
+/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh
+
+echo "deb https://packagecloud.io/timescale/timescaledb/debian/ bullseye main" > /etc/apt/sources.list.d/timescaledb.list
+
+wget --quiet -O - https://packagecloud.io/timescale/timescaledb/gpgkey | gpg --dearmor > /etc/apt/trusted.gpg.d/timescaledb.gpg
+
+apt update
+
+apt install timescaledb-2-postgresql-14
+
+timescaledb-tune --quiet --yes
+
+systemctl restart postgresql
+
+su postgres -c psql
+
+CREATE EXTENSION IF NOT EXISTS timescaledb;
+
+```
+
+## Iniciando almacen
+```bash
+su - postgres
+
+createuser -DRSP tamara
+Ingrese la contraseña para el nuevo rol: 
+Ingrésela nuevamente:
+
+createdb -O tamara tamara
+```
+
+Si es necesario, puede habilitarse las conexiones remotas para postgres:
+
+* Configurar `listen_addresses = '*'` en /etc/postgresql/14/main/postgresql.conf
+* Agregar `host    tamara          tamara          all                     scram-sha-256` en /etc/postgresql/14/main/pg_hba.conf
+
