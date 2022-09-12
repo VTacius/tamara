@@ -1,10 +1,14 @@
+use rayon::prelude::*;
+use std::time::SystemTime;
 
 use clap::Parser;
 use env_logger::Builder;
 use log::{info, error as errorlog};
+use postgres::NoTls;
 
 mod icmp;
 mod args;
+mod backend;
 
 
 fn main(){
@@ -16,6 +20,7 @@ fn main(){
     let mut builder_loggin = Builder::from_default_env();
     builder_loggin.filter_level(nivel_logging).init();
 
+    // Los objetivos los sacamos de un fichero yaml
     let objetivos = match args::leer_contenido(&opciones.listado){
         Ok(v) => v,
         Err(e) => {
@@ -23,10 +28,31 @@ fn main(){
             std::process::exit(1);
         }
     };
-    for destino in objetivos {
+
+    // Hay que revisar con mayor detenimiento si esto de verdad ayuda
+    let conexion= "host=localhost user=postgres password=password";
+    let manager = r2d2_postgres::PostgresConnectionManager::new(conexion.parse().unwrap(), NoTls);
+    let pool = r2d2::Pool::builder()
+        .max_size(15)
+        .build(manager)
+        .unwrap();
+
+    // Todos tendrán el mismo tiempo
+    // TODO: Revisar que lleve timezone
+    let estampa = SystemTime::now();
+    objetivos.par_iter().for_each(|destino|{
+        let pool = pool.clone();
         let objetivo = icmp::Objetivo::new(&destino.ip, destino.cfg.timeout);
         let resultado = objetivo.check( destino.cfg.intentos, 0);
-        info!("{}", resultado);
 
-    }
+        info!("{}", resultado);
+        let veredicto = if resultado.arriba { "arriba"} else { "abajo " };
+        let estado = backend::Estado::new(estampa, resultado);
+
+        match backend::enviar_estado(pool, estado) {
+           Ok(_) => info!("Se envio: {} {}", destino.ip, veredicto),
+           Err(e) => errorlog!("{:?}", e)
+        }
+
+    });
 }

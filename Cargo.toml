@@ -6,6 +6,7 @@ license = "MIT"
 description = "Herramienta de monitoreo ICMP"
 repository = "https://github.com/vtacius/tamara"
 edition = "2018"
+build = "build.rs"
 
 [dependencies]
 env_logger = "0.9.0"
@@ -17,3 +18,10 @@ libc = "0.2.132"
 clap = { version = "3.2.20", features = ["derive"] }
 serde = { version = "1.0.144", features = ["derive"] }
 serde_yaml = "0.9.11"
+postgres = "0.19.4"
+postgres-types = { version = "0.2.4", features = ["derive"] }
+tokio = { version = "1", features = ["full"] }
+futures = "0.3"
+r2d2 = "0.8.10"
+r2d2_postgres = "0.18.1"
+rayon = "1.5.3"

@@ -1,6 +1,6 @@
 use core::fmt;
 use std::net::{SocketAddr, IpAddr, Ipv4Addr};
-use std::io::{Read};
+use std::io::Read;
 use std::time::{Duration, Instant};
 
 use libc::sock_filter;
@@ -32,7 +32,7 @@ pub struct Resultado {
     pub host: String,
     pub arriba: bool,
     pub duracion: f64,
-    pub ttl: u8,
+    pub ttl: i16,
 }
 
 impl fmt::Display for Resultado {
@@ -52,7 +52,7 @@ impl Resultado {
            Some(v)  => *v,
            None => 0.into(),
         };
-        return Resultado{host: addr.to_string(), duracion, arriba, ttl};
+        return Resultado{host: addr.to_string(), duracion, arriba, ttl: i16::from(ttl)};
     }
 }
 
