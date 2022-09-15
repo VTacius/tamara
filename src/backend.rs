@@ -1,54 +1,9 @@
 use std::{time::SystemTime, net::IpAddr};
 
-use r2d2::Pool;
-use r2d2_postgres::PostgresConnectionManager;
-use thiserror::Error;
-use postgres::{NoTls, Row};
+use tokio_postgres::{NoTls, Row};
 use postgres_types::{FromSql, ToSql};
-use postgres::Client;
 
-use crate::icmp::Resultado;
-
-#[derive(Debug, FromSql, ToSql)]
-pub struct Estado {
-    pub id: i32,
-    pub estampa: SystemTime,
-    pub hostname :String,
-    pub ttl :i16,
-    pub duracion :f64,
-    pub arriba :bool,
-}
-
-impl Estado {
-    pub fn new(id :i32, estampa: SystemTime, resultado :Resultado) -> Estado {
-        let hostname = resultado.host;
-        let ttl = resultado.ttl.into();
-        let duracion = resultado.duracion;
-        let arriba = resultado.arriba;
-        
-        Estado{id, estampa, hostname, ttl, duracion, arriba}
-    }
-}
-
-#[derive(Debug, Error)]
-pub enum TamaraBackendError {
-    #[error("backend error: {error}")]
-    EnvioError {
-        #[from]
-        #[source]
-        error: ::postgres::Error
-    }
-}
-
-pub fn enviar_estado(conexion: Pool<PostgresConnectionManager<NoTls>>, estado :Estado) -> Result<u64, TamaraBackendError>{
-    let mut cliente = conexion.get().unwrap();
-
-    let sentencia = "insert into disponibilidad_icmp(time, servidor_id, ttl, duracion, arriba) values($1, $2, $3, $4, $5)";
-    let resultado = cliente.execute(
-        sentencia, 
-        &[&estado.estampa, &estado.id, &estado.ttl, &estado.duracion, &estado.arriba]).unwrap();
-    return Ok(resultado)
-}
+use crate::{icmp::Veredicto, errors::TamaraBackendError};
 
 pub struct DefaultConexionIcmp {
     pub intentos: i16,
@@ -67,6 +22,12 @@ pub struct Destino {
 
 }
 
+/*
+  
+  Recupera Vec<Objetivos> desde la base de datos
+ 
+*/
+
 impl Destino {
     fn new(servidor :&Row, predeterminados :&DefaultConexionIcmp)-> Destino {
         let id :i32 = servidor.get("id");
@@ -78,15 +39,68 @@ impl Destino {
     }
 }
 
-pub fn obtener_objetivos(conexion : &str, predeterminados :DefaultConexionIcmp) -> Result<Vec<Destino>, TamaraBackendError> {
+//  async Esta función es bien independiente, y hace todo como le da la gana;
+pub async fn obtener_objetivos(url_conexion : &str, predeterminados :DefaultConexionIcmp) -> Result<Vec<Destino>, TamaraBackendError> {
 
-    let mut cliente: Client= Client::connect(&conexion, NoTls).unwrap();
+    let (cliente, conexion) = tokio_postgres::connect(&url_conexion, NoTls).await.unwrap();
+
+    tokio::spawn(async move {
+        if let Err(e) = conexion.await {
+            eprint!("connection error: {}", e)
+        }
+    });
+
     let sentencia = "select s.id, s.direccion, c.intentos, c.timeout 
                             from servidores s 
                             left join cfg_conexion_icmp c on s.id = c.servidor_id 
                             order by s.id";
     
-    Ok(cliente.query(sentencia, &[])?.iter().map(|servidor|{
+    Ok(cliente.query(sentencia, &[]).await?.iter().map(|servidor|{
         Destino::new(servidor, &predeterminados)
     }).collect())
 }
+
+/*
+  
+  Guarda Veredicto, y otros datos, en la base de datos mediante Estado
+ 
+*/
+
+#[derive(Debug, FromSql, ToSql)]
+pub struct Estado {
+    pub id: i32,
+    pub estampa: SystemTime,
+    pub ttl :i16,
+    pub duracion :f64,
+    pub arriba :bool,
+}
+
+impl Estado {
+    pub fn _new(estampa: SystemTime, veredicto :Veredicto) -> Estado {
+        let id = veredicto.id;
+        let ttl = veredicto.ttl.into();
+        let duracion = veredicto.duracion;
+        let arriba = veredicto.arriba;
+        
+        Estado{id, estampa, ttl, duracion, arriba}
+    }
+}
+
+
+pub async fn _enviar_estado(url_conexion : &String, estado :Estado) -> Result<u64, TamaraBackendError>{
+    
+    let (cliente, conexion) = tokio_postgres::connect(&url_conexion, NoTls).await.unwrap();
+
+    tokio::spawn(async move {
+        if let Err(e) = conexion.await {
+            eprint!("connection error: {}", e)
+        }
+    });
+
+    let sentencia = "insert into disponibilidad_icmp(time, servidor_id, ttl, duracion, arriba) values($1, $2, $3, $4, $5)";
+    let resultado = cliente.execute(
+        sentencia, 
+        &[&estado.estampa, &estado.id, &estado.ttl, &estado.duracion, &estado.arriba]).await.unwrap();
+    return Ok(resultado)
+}
+

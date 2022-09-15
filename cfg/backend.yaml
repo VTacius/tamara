@@ -1,4 +1,4 @@
-host: 10.10.200.36 
-usuario: tamara 
-password: tamara
-dbname: tamara 
+host: 127.0.0.1 
+usuario: postgres 
+password: password
+dbname: postgres 

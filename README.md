@@ -10,9 +10,10 @@ Si bien es ya bastante funcional, `tamara` se encuentra aún en una fase tempran
 Aunque su selección fuera un poco azarosa, los objetivos actualmente son bien interesantes en muchas formas, así que deberían ser su primera opción para probarlo
 
 ## Configurar sudo
-Se agrega una entrada como la siguiente en `visudo`, de esta forma nos ahorramos poner el password a cada rato. O puede construirse directamente como root
+Se agrega una entrada como la siguiente en `visudo`, de esta forma nos ahorramos poner el password a cada rato.
 
-El comando ya no es necesario ejecutarse porque se ha configurado en `build.rs`
+`vscode` tendrá problemas si decide construir la aplicación directamente como root
+
 ```
 ...
 ## Same thing without a password
@@ -20,15 +21,21 @@ El comando ya no es necesario ejecutarse porque se ha configurado en `build.rs`
 usuario         ALL=(ALL)	    NOPASSWD: /usr/sbin/setcap
 ...
 ```
+
 ## Preparar el entorno
 Por ahora, tengo planeado usar `timescaledb` como backend, así que podemos instalar un entorno de pruebas con docker:
 ```bash
-docker run -d --name timescaledb -p 5432:5432 -e POSTGRES_PASSWORD=password timescale/timescaledb:latest-pg13-oss
+docker run -d --name timescaledb -p 5432:5432 -e POSTGRES_PASSWORD=password timescale/timescaledb:latest-pg14-oss
 ```
 
 E instalamos el esquema actual que se encuentra en `tamara.sql`
 ```bash
-psql -U postgres -h localhost -f tamara.sql
+psql -U postgres -h localhost -f sql/tamara.sql
+```
+
+Y los datos de prueba
+```bash
+psql -U postgres -h localhost -f sql/datos_prueba.sql
 ```
 
 ## Correr el script 

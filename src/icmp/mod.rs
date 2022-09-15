@@ -1,9 +1,7 @@
-mod paquete;
+mod packet;
 mod errors;
-mod icmp;
-mod destino;
+mod protocol;
 
-pub use self::paquete::{HEADER_SIZE as ICMP_HEADER_SIZE, IcmpV4, IcmpV6, EchoRequest};
-pub use self::errors::{TamaraError, PaqueteCreacionError, OpcionesError};
-pub use self::icmp::{ping, Resultado};
-pub use self::destino::Objetivo;
+pub use self::packet::{IcmpV4, EchoRequest};
+pub use self::errors::PaqueteCreacionError;
+pub use self::protocol::{ping, Veredicto};
