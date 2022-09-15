@@ -4,7 +4,6 @@ use tokio_postgres::{NoTls, Row};
 use postgres_types::{FromSql, ToSql};
 
 use crate::{icmp::Veredicto, errors::TamaraBackendError};
-
 pub struct DefaultConexionIcmp {
     pub intentos: i16,
     pub timeout: i64
@@ -13,13 +12,9 @@ pub struct DefaultConexionIcmp {
 #[derive(Debug)]
 pub struct Destino {
     pub id: i32,
-    
     pub ip: IpAddr,
-    
     pub intentos: i16,
-
     pub timeout: i64
-
 }
 
 /*
@@ -76,7 +71,7 @@ pub struct Estado {
 }
 
 impl Estado {
-    pub fn _new(estampa: SystemTime, veredicto :Veredicto) -> Estado {
+    pub fn new(estampa: SystemTime, veredicto :Veredicto) -> Estado {
         let id = veredicto.id;
         let ttl = veredicto.ttl.into();
         let duracion = veredicto.duracion;
@@ -86,10 +81,14 @@ impl Estado {
     }
 }
 
+#[derive(Copy, Clone, Debug)]
+pub struct Conexion<'a> {
+    pub cadena :&'a str
+}
 
-pub async fn _enviar_estado(url_conexion : &String, estado :Estado) -> Result<u64, TamaraBackendError>{
+pub async fn enviar_estado<'a>(conexion :Conexion<'a>, estado :Estado) -> Result<u64, TamaraBackendError>{
     
-    let (cliente, conexion) = tokio_postgres::connect(&url_conexion, NoTls).await.unwrap();
+    let (cliente, conexion) = tokio_postgres::connect(&conexion.cadena, NoTls).await.unwrap();
 
     tokio::spawn(async move {
         if let Err(e) = conexion.await {

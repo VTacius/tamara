@@ -4,8 +4,10 @@ mod errors;
 mod backend;
 mod disponibilidad;
 
+use std::time::SystemTime;
+
 use args::{leer_configuracion_backend, Opciones, establecer_nivel_loggin};
-use backend::DefaultConexionIcmp;
+use backend::{DefaultConexionIcmp, enviar_estado, Estado, Conexion};
 use clap::Parser;
 use env_logger::Builder;
 use log::error as errorlog;
@@ -36,10 +38,19 @@ async fn main() {
     let pdi = DefaultConexionIcmp{intentos: 3, timeout: 200}; 
     let objetivos = backend::obtener_objetivos(&conexion, pdi).await.unwrap(); 
 
+
+    let estampa = SystemTime::now();
+    let conexion = Conexion{cadena: &conexion};
+    
     stream::iter(objetivos)
         .map(PinnerFuture::new)
         .buffer_unordered(60)
-        .for_each(|veredicto| async move {
-            println!("{}", veredicto) 
-        }).await
+        .for_each_concurrent(25, |veredicto| async move {
+            println!("{}", veredicto);
+            let estado = Estado::new(estampa, veredicto);
+            let envio = enviar_estado(conexion, estado).await;
+            println!("{:?}", envio);
+        }).await;
+
+
 }
