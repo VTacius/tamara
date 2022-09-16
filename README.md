@@ -6,10 +6,8 @@ La idea es tener la herraamienta con la mínima funcionalidad para verificar la 
 
 Si bien es ya bastante funcional, `tamara` se encuentra aún en una fase temprana de desarrollo. Es decir, ya es capaz de reportar y almacenar los resultados de su proceso de pineado, pero supongo que algunas cosas seguirán cambiando en un lapso corto
 
-## Sobre los objetivos en `objetivos.yaml`
-Aunque su selección fuera un poco azarosa, los objetivos actualmente son bien interesantes en muchas formas, así que deberían ser su primera opción para probarlo
-
-## Configurar sudo
+## Preparar el entorno
+### Configurar sudo
 Se agrega una entrada como la siguiente en `visudo`, de esta forma nos ahorramos poner el password a cada rato.
 
 `vscode` tendrá problemas si decide construir la aplicación directamente como root
@@ -22,7 +20,7 @@ usuario         ALL=(ALL)	    NOPASSWD: /usr/sbin/setcap
 ...
 ```
 
-## Preparar el entorno
+### Configurar el backend
 Por ahora, tengo planeado usar `timescaledb` como backend, así que podemos instalar un entorno de pruebas con docker:
 ```bash
 docker run -d --name timescaledb -p 5432:5432 -e POSTGRES_PASSWORD=password timescale/timescaledb:latest-pg14-oss
@@ -38,24 +36,14 @@ Y los datos de prueba
 psql -U postgres -h localhost -f sql/datos_prueba.sql
 ```
 
+### Sobre los objetivos en `datos_prueba.sql`
+Aunque su selección fuera un poco azarosa, los objetivos actualmente son bien interesantes en muchas formas, así que deberían ser su primera opción para probarlo
+
 ## Correr el script 
 Ahora ya podemos construir y luego correr el script sin mayores inconvenientes
 ```bash
-cargo run -- --listado objetivos.yaml  -v
+cargo build && sudo setcap cap_net_raw+ep target/debug/tamara && time ./target/debug/tamara -d cfg
 ```
-También puede preferise el construir el script y luego ejecutarlo
-```bash
-cargo build
-./target/debug/tamara
-```
-De esta forma podría correrse varias veces para medir su rendimiento
-```bash
-cargo build
-time ./target/debug/tamara
-```
-
-# Sobre como se piensa que entré en producción
-El script se correrá como un `cron`, quizá desde varias instancias que dejarán los datos en una mismo backend. De allí, faltará hacer una API, que incluso podría servir para otras aplicaciones, y quizá un pequeño mapa para mostrar los datos de forma amigable
 
 # Instrucciones para instalación en Debian 11
 
@@ -99,3 +87,9 @@ Si es necesario, puede habilitarse las conexiones remotas para postgres:
 * Configurar `listen_addresses = '*'` en /etc/postgresql/14/main/postgresql.conf
 * Agregar `host    tamara          tamara          all                     scram-sha-256` en /etc/postgresql/14/main/pg_hba.conf
 
+
+
+# Notas sobre su puesta en producción
+El script se correrá como un `cron`, quizá desde varias instancias que dejarán los datos en una mismo backend. 
+
+De allí, faltará hacer una API, que incluso podría servir para otras aplicaciones, y quizá un pequeño mapa para mostrar los datos de forma amigable

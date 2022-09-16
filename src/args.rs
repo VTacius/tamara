@@ -1,7 +1,6 @@
 use std::{fs::File, io::BufReader, path::Path};
 
 use clap::Parser;
-use log::LevelFilter;
 use serde::{Serialize, Deserialize};
 
 use crate::errors::OpcionesError;
@@ -19,7 +18,11 @@ pub struct Opciones {
 
     /// Si debe enviarse los resultados al backend
     #[clap(short, long)]
-    pub enviar: bool
+    pub enviar: bool,
+    
+    /// La aplicación no muestra nada 
+    #[clap(short, long)]
+    pub quiet: bool
 }
 
 fn validar_fichero(name: &str) -> Result<(), String> {
@@ -39,23 +42,34 @@ pub struct Backend {
     pub dbname: String,
 }
 
-pub fn leer_configuracion_backend(opciones: &Opciones) -> Result<String, OpcionesError> {
+// TODO: Es una copia con un nombre diferente de fn cabecera DefaultConexionIcmp
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ConexionIcmp {
+    pub intentos: i16,
+    pub timeout: i64
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Hilos {
+    pub icmp: usize,
+    pub backend: usize
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Cfg {
+    pub backend: Backend,
+    // TODO: Después cambiaremos la estructrua si metemos otros
+    pub icmp: ConexionIcmp,
+    
+    pub hilos: Hilos
+}
+
+pub fn leer_configuracion_backend(opciones: &Opciones) -> Result<Cfg, OpcionesError> {
     let ruta = format!("{}//backend.yaml", opciones.directorio_configuracion);
     let fichero = File::open(ruta)?;
     let lector = BufReader::new(fichero);
-    let cfg :Backend = serde_yaml:: from_reader(lector)?;
+    let cfg :Cfg = serde_yaml:: from_reader(lector)?;
 
-    // TODO: Implementar string o un objeto de configuración acorde a r2d2
-    let resultado = format!("host={} user={} password={} dbname={}", cfg.host, cfg.usuario, cfg.password, cfg.dbname);
-
-    Ok(resultado)
-}
-
-pub fn establecer_nivel_loggin(verbosidad: u8) -> LevelFilter {
-    match verbosidad {
-        1 => LevelFilter::Info,
-        2 => LevelFilter::Debug,
-        3 => LevelFilter::Trace,
-        _ => LevelFilter::Error
-    }
+    Ok(cfg)
 }

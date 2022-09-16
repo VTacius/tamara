@@ -1,4 +1,11 @@
-host: 127.0.0.1 
-usuario: postgres 
-password: password
-dbname: postgres 
+backend: 
+  host: 127.0.0.1 
+  usuario: postgres 
+  password: password
+  dbname: postgres 
+icmp:
+  intentos: 3
+  timeout: 200
+hilos:
+  icmp: 50
+  backend: 10
