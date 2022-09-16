@@ -22,8 +22,10 @@ usuario         ALL=(ALL)	    NOPASSWD: /usr/sbin/setcap
 
 ### Configurar el backend
 Por ahora, tengo planeado usar `timescaledb` como backend, así que podemos instalar un entorno de pruebas con docker:
+
+(El `-e "TZ=GMT-6"` configura una zona horaria en el contenedor)
 ```bash
-docker run -d --name timescaledb -p 5432:5432 -e POSTGRES_PASSWORD=password timescale/timescaledb:latest-pg14-oss
+docker run -e "TZ=GMT-6" -d --name timescaledb -p 5432:5432 -e POSTGRES_PASSWORD=password timescale/timescaledb:latest-pg14-oss
 ```
 
 E instalamos el esquema actual que se encuentra en `tamara.sql`
@@ -64,11 +66,13 @@ apt install timescaledb-2-postgresql-14
 timescaledb-tune --quiet --yes
 
 systemctl restart postgresql
+```
 
+A modo de prueba, podemos crear la extensión en la base postgres
+```bash
 su postgres -c psql
 
 CREATE EXTENSION IF NOT EXISTS timescaledb;
-
 ```
 
 ## Iniciando almacen
@@ -83,11 +87,50 @@ createdb -O tamara tamara
 ```
 
 Si es necesario, puede habilitarse las conexiones remotas para postgres:
+```sql
+ALTER SYSTEM SET listen_addresses='*';
+```
 
-* Configurar `listen_addresses = '*'` en /etc/postgresql/14/main/postgresql.conf
-* Agregar `host    tamara          tamara          all                     scram-sha-256` en /etc/postgresql/14/main/pg_hba.conf
+Y configurar el acceso remoto a la base de datos
+Agregar `host    tamaradb        tamara          all                     scram-sha-256` en /etc/postgresql/14/main/pg_hba.conf
 
+Y luego configuramos el esquema
+```bash
+psql -U tamara -h 10.10.200.34 tamaradb -f sql/tamara.sql
+```
+## Instalar tamara, el poller
 
+* Construimos el binario
+```bash
+cargo build --profile release
+```
+
+* Lo enviamos al servidor destino
+```bash
+scp target/release/tamara root@monitoreo-tamara-poller:/usr/local/sbin/
+```
+* Enviamos la configuración al servidor (Y nos aseguramos de cambiar los parámetros para que se corresponda con los nuestros)
+```bash
+scp -r cfg/ root@monitoreo-tamara-poller:/etc/tamara
+```
+
+### Pero nada es tan fácil, nunca
+```bash
+podman run -it --rm -v $(pwd):/usr/local/src/ debian:11.4-slim  bash
+
+apt update 
+apt -y install curl gcc
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > instalador
+sh instalador --default-host  x86_64-unknown-linux-gnu --default-toolchain stable --profile minimal -y
+source "$HOME/.cargo/env"
+cd /usr/local/src/
+cargo build --profile release
+```
+
+* Configuramos los objetivos, por ahora, por medio de un archivo `sql` como el que esta en `sql/datos_prueba.sql`:
+```bash
+psql -h 10.10.200.34 -U tamara tamaradb -f sql/datos_prueba_minsal.sql
+```
 
 # Notas sobre su puesta en producción
 El script se correrá como un `cron`, quizá desde varias instancias que dejarán los datos en una mismo backend. 
