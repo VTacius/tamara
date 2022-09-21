@@ -3,7 +3,7 @@ use std::{time::SystemTime, net::IpAddr};
 use tokio_postgres::{NoTls, Row};
 use postgres_types::{FromSql, ToSql};
 
-use crate::{icmp::Veredicto, errors::TamaraBackendError};
+use crate::{icmp::Veredicto, errors::TamaraBackendError, disponibilidad::{VeredictoHTTP, VeredictoDB}};
 pub struct DefaultConexionIcmp {
     pub intentos: i16,
     pub timeout: i64
@@ -71,7 +71,7 @@ pub struct Estado {
 }
 
 impl Estado {
-    pub fn new(estampa: SystemTime, veredicto :Veredicto) -> Estado {
+    pub fn new(estampa: SystemTime, veredicto :&Veredicto) -> Estado {
         let id = veredicto.id;
         let ttl = veredicto.ttl.into();
         let duracion = veredicto.duracion;
@@ -103,3 +103,83 @@ pub async fn enviar_estado<'a>(conexion :Conexion<'a>, estado :Estado) -> Result
     return Ok(resultado)
 }
 
+/**
+ * Acá empieza el trabajo para guardar HTTP
+ */
+#[derive(Debug, FromSql, ToSql)]
+pub struct EstadoHTTP {
+    pub id: i32,
+    pub estampa: SystemTime,
+    pub duracion :f64,
+    pub arriba :bool,
+}
+
+impl EstadoHTTP {
+    pub fn new(estampa: SystemTime, veredicto :&VeredictoHTTP) -> EstadoHTTP {
+        let id = veredicto.id;
+        let duracion = veredicto.duracion;
+        let arriba = veredicto.arriba;
+        
+        EstadoHTTP{id, estampa, duracion, arriba}
+    }
+}
+
+pub async fn enviar_estado_http<'a>(conexion :Conexion<'a>, estado :EstadoHTTP) -> Result<u64, TamaraBackendError>{
+    
+    let (cliente, conexion) = tokio_postgres::connect(&conexion.cadena, NoTls).await.unwrap();
+
+    tokio::spawn(async move {
+        if let Err(e) = conexion.await {
+            eprint!("connection error: {}", e)
+        }
+    });
+
+    let sentencia = "insert into disponibilidad_http(time, servidor_id, duracion, arriba) values($1, $2, $3, $4)";
+    let resultado = cliente.execute(
+        sentencia, 
+        &[&estado.estampa, &estado.id, &estado.duracion, &estado.arriba]).await.unwrap();
+    
+    return Ok(resultado)
+}
+
+/**
+ * Acá empieza el trabajo para guardar DB 
+ */
+#[derive(Debug, FromSql, ToSql)]
+pub struct EstadoDB {
+    pub id: i32,
+    pub estampa: SystemTime,
+    pub arriba :bool,
+    pub planning: f64,
+    pub execution: f64,
+}
+
+impl EstadoDB {
+    pub fn new(estampa: SystemTime, veredicto :&VeredictoDB) -> EstadoDB {
+        let id = veredicto.id;
+        let arriba = veredicto.arriba;
+        let planning = veredicto.planning;
+        let execution = veredicto.execution;
+        
+        EstadoDB{id, estampa, arriba, planning, execution }
+    }
+}
+
+pub async fn enviar_estado_db<'a>(conexion :Conexion<'a>, estado :EstadoDB) -> Result<u64, TamaraBackendError>{
+    
+    let (cliente, conexion) = tokio_postgres::connect(&conexion.cadena, NoTls).await.unwrap();
+
+    tokio::spawn(async move {
+        if let Err(e) = conexion.await {
+            eprint!("connection error: {}", e)
+        }
+    });
+
+    // TODO: Trabajar en este error. ¿Cómo debemos manejar, habida cuenta de que ocurre para todos?
+    let sentencia = "insert into disponibilidad_db(time, servidor_id, arriba, planning, execution) values($1, $2, $3, $4, $5)";
+    let resultado = cliente.execute(
+        sentencia, 
+        &[&estado.estampa, &estado.id, &estado.arriba, &estado.planning, &estado.execution]).await.unwrap();
+    
+    return Ok(resultado)
+}
