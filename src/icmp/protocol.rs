@@ -1,43 +1,13 @@
-use core::fmt;
 use std::net::{SocketAddr, IpAddr, Ipv4Addr};
 use std::io::Read;
 use std::time::{Duration, Instant};
 
-use libc::sock_filter;
 use log::trace;
+use libc::sock_filter;
 use socket2::{Domain, Protocol, Socket, Type};
 
 use crate::icmp::{EchoRequest, IcmpV4};
-
-#[derive(Copy, Clone, Debug)]
-pub struct Veredicto {
-    pub id: i32,
-    pub host: IpAddr,
-    pub arriba: bool,
-    pub duracion: f64,
-    pub ttl: i16,
-}
-
-impl Veredicto {
-    fn new(id: i32, host: IpAddr, arriba: bool, duracion :Instant, datos: &[u8]) -> Veredicto {
-        let duracion = (duracion.elapsed().as_micros() as f64) /1000.0;
-        let ttl = match datos.get(8) {
-           Some(v)  => *v,
-           None => 0.into(),
-        };
-        return Veredicto{id, host, duracion, arriba, ttl: i16::from(ttl)};
-    }
-}
-
-impl fmt::Display for Veredicto {
-    fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
-        if self.arriba {
-            write!(f, "{} ttl={} tiempo={}ms", self.host, self.ttl, self.duracion)
-        } else {
-            write!(f, "Host {} no responde ", self.host)
-        }
-    }
-}
+use crate::tipos::Veredicto;
 
 // Recuerda que comienzas después de lo que te diga thshark -ddd, porque aca no nos llegan las cabeceras de ethernet
 fn crear_filtros(addr: IpAddr) -> Vec<sock_filter>{
@@ -63,7 +33,7 @@ fn crear_filtros(addr: IpAddr) -> Vec<sock_filter>{
 
 // TODO: Validar que ttl sea menor a 255
 // TODO: Pues nada, loguea esos errores
-pub fn ping(id: i32, addr: IpAddr, timeout: Duration, ttl: u8, secuencia: u16) -> Veredicto {
+pub fn ping(id: i32, addr: IpAddr, timeout: Duration, ttl: u8, secuencia: u16) -> Veredicto<'static> {
 
     let inicio_error = Instant::now();
     let resultado_error = Veredicto::new(id, addr, false, inicio_error, &[0, 1]);

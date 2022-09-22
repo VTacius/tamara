@@ -2,14 +2,14 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum OpcionesError {
-    #[error("Error abriendo el fichero")]
+    #[error("error abriendo el fichero: {error}")]
     FicheroError {
         #[from]
         #[source]
         error: ::std::io::Error
     },
     
-    #[error("Error en el formato del fichero")]
+    #[error("error en el formato del fichero: {error}")]
     FormatoError {
         #[from]
         #[source]

@@ -10,13 +10,14 @@ use std::time::Duration;
 use futures::Future;
 
 // TODO: Arregla esa confusión entres destinos, por favor: Hay uno en backend y otro en args
-use crate::{icmp::{ping, Veredicto}, backend::Destino};
+use crate::{icmp::ping, backend::Destino};
+use crate::tipos::Veredicto;
 
 
 struct Estatuto {
     completed: bool,
     waker: Option<Waker>,
-    resultado: Veredicto,
+    resultado: Veredicto<'static>,
 }
  pub struct PinnerFuture {
     shared_state: Arc<Mutex<Estatuto>>
@@ -25,8 +26,8 @@ struct Estatuto {
  impl PinnerFuture {
     pub fn new(destino: Destino) -> PinnerFuture {
 
-        let timeout = Duration::from_millis(500);
-        let resultado = Veredicto { id: destino.id, host: destino.ip, arriba: false, duracion: 0.0, ttl: 0 };
+        let timeout = Duration::from_millis(destino.cfg_conexion.timeout as u64);
+        let resultado = Veredicto::new_abajo(destino.id, destino.ip); 
         
         let shared_state = Arc::new(Mutex::new(Estatuto{
             completed: false,
@@ -58,7 +59,7 @@ struct Estatuto {
  }
  
  impl Future for PinnerFuture {
-    type Output = Veredicto;
+    type Output = Veredicto<'static>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         

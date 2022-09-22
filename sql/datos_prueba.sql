@@ -1,115 +1,35 @@
---
--- PostgreSQL database dump
---
+-- Establecimientos
+INSERT INTO establecimientos (id, nombre, ubicacion) VALUES (1, 'OpenDNS', '(13.729855674886958,-89.21425114110878)');
+INSERT INTO establecimientos (id, nombre, ubicacion) VALUES (2, 'Lejania', '(13.733691037243023,-89.16438351047562)');
+INSERT INTO establecimientos (id, nombre, ubicacion) VALUES (3, 'Nonwhere', '(13.722768427236153,-89.21575317817604)');
+INSERT INTO establecimientos (id, nombre, ubicacion) VALUES (4, 'Alejado', '(13.725645041806475,-89.16562805547422)');
+INSERT INTO establecimientos (id, nombre, ubicacion) VALUES (5, 'OpenDNS, oficina central', '(13.721309261435396,-89.21184788180116)');
+INSERT INTO establecimientos (id, nombre, ubicacion) VALUES (6, 'Ninguna Parte', '(13.722643356237358,-89.21558151679695)');
+INSERT INTO establecimientos (id, nombre, ubicacion) VALUES (7, 'Muy, muy lejos', '(13.731148032254191,-89.15717373255275)');
+INSERT INTO establecimientos (id, nombre, ubicacion) VALUES (8, 'Cloudfare', '(13.713304533367593,-89.19481048992392)');
+INSERT INTO establecimientos (id, nombre, ubicacion) VALUES (9, 'SVNet', '(13.710260997436652,-89.20077572284819)');
+INSERT INTO establecimientos (id, nombre, ubicacion) VALUES (10, 'Google',  '(13.710219304889753,-89.20107613026164)');
 
--- Dumped from database version 14.5
--- Dumped by pg_dump version 14.3
+-- Servidores
+INSERT INTO servidores (id, establecimiento_id, hostname, direccion) VALUES (1, 1, 'opendns-01', '208.67.222.222');
+INSERT INTO servidores (id, establecimiento_id, hostname, direccion) VALUES (2, 2, 'lejano-01', '194.68.26.89');
+INSERT INTO servidores (id, establecimiento_id, hostname, direccion) VALUES (3, 3, 'noexistente-01', '7.7.7.7');
+INSERT INTO servidores (id, establecimiento_id, hostname, direccion) VALUES (4, 4, 'lejano-02', '172.105.163.170');
+INSERT INTO servidores (id, establecimiento_id, hostname, direccion) VALUES (5, 5, 'opendns-02', '208.67.220.220');
+INSERT INTO servidores (id, establecimiento_id, hostname, direccion) VALUES (6, 6, 'noexistente-02', '8.8.8.5');
+INSERT INTO servidores (id, establecimiento_id, hostname, direccion) VALUES (7, 7, 'lejano-03', '45.76.96.192');
+INSERT INTO servidores (id, establecimiento_id, hostname, direccion) VALUES (8, 8, 'cloudfare-01', '1.1.1.1');
+INSERT INTO servidores (id, establecimiento_id, hostname, direccion) VALUES (9, 9, 'svnet-01', '74.117.153.156');
+INSERT INTO servidores (id, establecimiento_id, hostname, direccion) VALUES (10, 10, 'google-01', '8.8.8.8');
 
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
-SET check_function_bodies = false;
-SET xmloption = content;
-SET client_min_messages = warning;
-SET row_security = off;
-
-SET default_tablespace = '';
-
-SET default_table_access_method = heap;
-
---
--- Name: servidores; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.servidores (
-    id integer NOT NULL,
-    hostname character varying(63),
-    direccion inet,
-    ubicacion point
-);
-
-
-ALTER TABLE public.servidores OWNER TO postgres;
-
---
--- Name: servidores_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.servidores_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.servidores_id_seq OWNER TO postgres;
-
---
--- Name: servidores_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.servidores_id_seq OWNED BY public.servidores.id;
-
-
---
--- Name: servidores id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.servidores ALTER COLUMN id SET DEFAULT nextval('public.servidores_id_seq'::regclass);
-
-
---
--- Data for Name: servidores; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-INSERT INTO public.servidores (id, hostname, direccion, ubicacion) VALUES (1, 'opendns-01', '208.67.222.222', '(13.729855674886958,-89.21425114110878)');
-INSERT INTO public.servidores (id, hostname, direccion, ubicacion) VALUES (2, 'lejano-01', '194.68.26.89', '(13.733691037243023,-89.16438351047562)');
-INSERT INTO public.servidores (id, hostname, direccion, ubicacion) VALUES (3, 'noexistente-01', '7.7.7.7', '(13.722768427236153,-89.21575317817604)');
-INSERT INTO public.servidores (id, hostname, direccion, ubicacion) VALUES (4, 'lejano-02', '172.105.163.170', '(13.725645041806475,-89.16562805547422)');
-INSERT INTO public.servidores (id, hostname, direccion, ubicacion) VALUES (5, 'opendns-02', '208.67.220.220', '(13.721309261435396,-89.21184788180116)');
-INSERT INTO public.servidores (id, hostname, direccion, ubicacion) VALUES (6, 'noexistente-02', '8.8.8.5', '(13.722643356237358,-89.21558151679695)');
-INSERT INTO public.servidores (id, hostname, direccion, ubicacion) VALUES (7, 'lejano-03', '45.76.96.192', '(13.731148032254191,-89.15717373255275)');
-INSERT INTO public.servidores (id, hostname, direccion, ubicacion) VALUES (8, 'cloudfare-01', '1.1.1.1', '(13.713304533367593,-89.19481048992392)');
-INSERT INTO public.servidores (id, hostname, direccion, ubicacion) VALUES (9, 'svnet-01', '74.117.153.156', '(13.710260997436652,-89.20077572284819)');
-INSERT INTO public.servidores (id, hostname, direccion, ubicacion) VALUES (11, 'google-01', '8.8.8.8', '(13.710219304889753,-89.20107613026164)');
-
-
---
--- Name: servidores_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.servidores_id_seq', 11, true);
-
-
---
--- Name: servidores servidores_hostname_key; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.servidores
-    ADD CONSTRAINT servidores_hostname_key UNIQUE (hostname);
-
-
---
--- Name: servidores servidores_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.servidores
-    ADD CONSTRAINT servidores_pkey PRIMARY KEY (id);
-
-
---
--- Name: servidor_hostname_idx; Type: INDEX; Schema: public; Owner: postgres
---
-
-CREATE INDEX servidor_hostname_idx ON public.servidores USING btree (hostname);
-
-
---
--- PostgreSQL database dump complete
---
-
+-- Servicios
+INSERT INTO servicios (id, servidor_id) VALUES (1, 1);
+INSERT INTO servicios (id, servidor_id) VALUES (2, 2);
+INSERT INTO servicios (id, servidor_id) VALUES (3, 3);
+INSERT INTO servicios (id, servidor_id) VALUES (4, 4);
+INSERT INTO servicios (id, servidor_id) VALUES (5, 5);
+INSERT INTO servicios (id, servidor_id) VALUES (6, 6);
+INSERT INTO servicios (id, servidor_id) VALUES (7, 7);
+INSERT INTO servicios (id, servidor_id) VALUES (8, 8);
+INSERT INTO servicios (id, servidor_id) VALUES (9, 9);
+INSERT INTO servicios (id, servidor_id) VALUES (10, 10);

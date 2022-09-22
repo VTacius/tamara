@@ -6,7 +6,7 @@ use regex::Regex;
 use lazy_static::lazy_static;
 use tokio_postgres::NoTls;
 
-use crate::icmp::Veredicto;
+use crate::tipos::Veredicto;
 
 lazy_static!{
     static ref EXAMINADOR: Regex = Regex::new(r"(?P<tipo>Planning|Execution) Time:\s(?P<tiempo>\d+\.\d+)\sms").unwrap();
@@ -32,7 +32,7 @@ impl VeredictoDB {
     }
 }
 
-pub async fn db_future(veredicto_icmp :&Veredicto) -> VeredictoDB {
+pub async fn db_future(veredicto_icmp :&Veredicto<'_>) -> VeredictoDB {
   
     // TODO: Implementar un timeout basado en los resultados ICMP
     //let timeout = veredicto_icmp.duracion * 1.2;

@@ -3,9 +3,9 @@ backend:
   usuario: postgres 
   password: password
   dbname: postgres 
-icmp:
+default_cfg_conexion:
   intentos: 3
-  timeout: 200
+  timeout: 500
 hilos:
   icmp: 50
   backend: 10

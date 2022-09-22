@@ -1,6 +1,6 @@
 use std::{net::IpAddr, time::Duration};
 use log::trace;
-use crate::icmp::Veredicto;
+use crate::tipos::Veredicto;
 
 #[derive(Debug)]
 pub struct VeredictoHTTP {
@@ -17,7 +17,7 @@ impl VeredictoHTTP {
 }
 
 // Pese a todo, es una implementación pobre. Es necesario validar el status, que el tiempo sea real y ver que otros datos podemos sacar
-pub async  fn http_future (veredicto_icmp :&Veredicto) -> VeredictoHTTP {
+pub async fn http_future (veredicto_icmp :&Veredicto<'_>) -> VeredictoHTTP {
     let url = format!("http://{}/", veredicto_icmp.host);
 
     let timeout = veredicto_icmp.duracion * 1.1;
