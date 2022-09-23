@@ -1,6 +1,7 @@
 use std::{fs::File, io::BufReader, path::Path};
 
 use clap::Parser;
+use uuid::Uuid;
 use serde::{Serialize, Deserialize};
 
 use crate::errors::OpcionesError;
@@ -42,7 +43,15 @@ pub struct Hilos {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct Api {
+    pub base_url: String,
+    pub timeout: u64
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Cfg{
+    pub api: Api,
+    pub identificador: Uuid,
     pub backend: CfgBackend,
     pub default_cfg_conexion: CfgConexionObjetivos,
     pub hilos: Hilos

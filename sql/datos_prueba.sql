@@ -1,14 +1,17 @@
+-- Sondas
+INSERT INTO sondas (id, nombre) VALUES (1, 'NIVEL-CENTRAL');
+
 -- Establecimientos
-INSERT INTO establecimientos (id, nombre, ubicacion) VALUES (1, 'OpenDNS', '(13.729855674886958,-89.21425114110878)');
-INSERT INTO establecimientos (id, nombre, ubicacion) VALUES (2, 'Lejania', '(13.733691037243023,-89.16438351047562)');
-INSERT INTO establecimientos (id, nombre, ubicacion) VALUES (3, 'Nonwhere', '(13.722768427236153,-89.21575317817604)');
-INSERT INTO establecimientos (id, nombre, ubicacion) VALUES (4, 'Alejado', '(13.725645041806475,-89.16562805547422)');
-INSERT INTO establecimientos (id, nombre, ubicacion) VALUES (5, 'OpenDNS, oficina central', '(13.721309261435396,-89.21184788180116)');
-INSERT INTO establecimientos (id, nombre, ubicacion) VALUES (6, 'Ninguna Parte', '(13.722643356237358,-89.21558151679695)');
-INSERT INTO establecimientos (id, nombre, ubicacion) VALUES (7, 'Muy, muy lejos', '(13.731148032254191,-89.15717373255275)');
-INSERT INTO establecimientos (id, nombre, ubicacion) VALUES (8, 'Cloudfare', '(13.713304533367593,-89.19481048992392)');
-INSERT INTO establecimientos (id, nombre, ubicacion) VALUES (9, 'SVNet', '(13.710260997436652,-89.20077572284819)');
-INSERT INTO establecimientos (id, nombre, ubicacion) VALUES (10, 'Google',  '(13.710219304889753,-89.20107613026164)');
+INSERT INTO establecimientos (id, sonda_id, nombre, ubicacion) VALUES (1, 1, 'OpenDNS', '(13.729855674886958,-89.21425114110878)');
+INSERT INTO establecimientos (id, sonda_id, nombre, ubicacion) VALUES (2, 1, 'Lejania', '(13.733691037243023,-89.16438351047562)');
+INSERT INTO establecimientos (id, sonda_id, nombre, ubicacion) VALUES (3, 1, 'Nonwhere', '(13.722768427236153,-89.21575317817604)');
+INSERT INTO establecimientos (id, sonda_id, nombre, ubicacion) VALUES (4, 1, 'Alejado', '(13.725645041806475,-89.16562805547422)');
+INSERT INTO establecimientos (id, sonda_id, nombre, ubicacion) VALUES (5, 1, 'OpenDNS, oficina central', '(13.721309261435396,-89.21184788180116)');
+INSERT INTO establecimientos (id, sonda_id, nombre, ubicacion) VALUES (6, 1, 'Ninguna Parte', '(13.722643356237358,-89.21558151679695)');
+INSERT INTO establecimientos (id, sonda_id, nombre, ubicacion) VALUES (7, 1, 'Muy, muy lejos', '(13.731148032254191,-89.15717373255275)');
+INSERT INTO establecimientos (id, sonda_id, nombre, ubicacion) VALUES (8, 1, 'Cloudfare', '(13.713304533367593,-89.19481048992392)');
+INSERT INTO establecimientos (id, sonda_id, nombre, ubicacion) VALUES (9, 1, 'SVNet', '(13.710260997436652,-89.20077572284819)');
+INSERT INTO establecimientos (id, sonda_id, nombre, ubicacion) VALUES (10, 1, 'Google',  '(13.710219304889753,-89.20107613026164)');
 
 -- Servidores
 INSERT INTO servidores (id, establecimiento_id, hostname, direccion) VALUES (1, 1, 'opendns-01', '208.67.222.222');
