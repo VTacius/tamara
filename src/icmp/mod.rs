@@ -4,4 +4,4 @@ mod protocol;
 
 pub use self::packet::{IcmpV4, EchoRequest};
 pub use self::errors::PaqueteCreacionError;
-pub use self::protocol::ping;
+pub use self::protocol::CheckIcmp;

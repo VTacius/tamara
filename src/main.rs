@@ -8,15 +8,15 @@ mod disponibilidad;
 
 
 use args::{leer_configuracion_backend, Cfg, Opciones};
-use tipos::{Veredicto, Implementador};
-use tipos::CfgBackend;
+use tipos::ResultadoIcmp;
 use utils::{configurar_logger, cabecera, footer};
-use disponibilidad::PinnerFuture;
+use disponibilidad::implementar_check_icmp;
+use backend::enviar_datos;
 
 use clap::Parser;
-use log::{error as errorlog, info};
+use log::error as errorlog;
 use std::time::SystemTime;
-use futures::{stream, StreamExt};
+use futures::StreamExt;
 
 
 #[tokio::main]
@@ -51,60 +51,20 @@ async fn main() {
 
     let estampa = SystemTime::now();
   
-    // Polling de disponibilidad
+    // Polling de disponibilidad icmp
     let instante_de_inicio = cabecera("Polling de disponibilidad", opciones.quiet);
-    let veredictos :Vec<Veredicto> = stream::iter(objetivos).map(PinnerFuture::new).buffer_unordered(cfg.hilos.icmp).collect().await;
+    let resultados_check_icmp :Vec<ResultadoIcmp> = implementar_check_icmp(objetivos).buffer_unordered(cfg.hilos.icmp).collect().await;
 
     // TODO: Vamos, sé que puedes mejorar esto
-    let arriba = veredictos.iter().filter(|v| v.arriba).count();
-    let abajo = veredictos.iter().count() - arriba;
+    let arriba = resultados_check_icmp.iter().filter(|v| v.arriba).count();
+    let abajo = resultados_check_icmp.iter().count() - arriba;
     let mensaje = format!("Host > Arriba: {} - Abajo: {}", arriba, abajo);
     footer(&mensaje, opciones.quiet, instante_de_inicio);
 
-    // Guardado de resultados
+    // Guardando los resultados de sonda ICMP
     let instante_de_inicio = cabecera("Guardado de resultados", opciones.quiet);
+    let _ = enviar_datos(estampa, cfg.backend, resultados_check_icmp).buffer_unordered(cfg.hilos.icmp).collect::<Vec<u64>>().await;
 
-    let resultados = Implementador::new(&cfg.backend, &veredictos, &estampa);
-    stream::iter(resultados)
-        .for_each_concurrent(cfg.hilos.backend, |veredicto| async move {
-            let _ = veredicto.enviar().await;
-        }).await;
     footer("", opciones.quiet, instante_de_inicio);
     
-    /* 
-    // Polling de disponibilidad web
-    let instante_de_inicio = cabecera("Polling de disponibilidad web", opciones.quiet);
-    let veredictos_http :Vec<VeredictoHTTP> = stream::iter(&veredictos).map(http_future).buffer_unordered(cfg.hilos.icmp).collect().await;
-    // TODO: Acá puede haber un mensaje más bonito, y lo sabes
-    footer("", opciones.quiet, instante_de_inicio);
-   
-    // Guardado de resultados
-    let instante_de_inicio = cabecera("Guardado de resultados", opciones.quiet);
-    stream::iter(&veredictos_http)
-        .for_each_concurrent(cfg.hilos.backend, |veredicto| async move {
-             
-            info!("{:?}", veredicto);
-            let estado = EstadoHTTP::new(estampa, veredicto);
-            let envio = enviar_estado_http(&cfg.backend.url_conexion(), estado).await;
-            info!("{:?}", envio);
-            
-        }).await;
-    footer("", opciones.quiet, instante_de_inicio);
-
-    // Polling de disponibilidad web
-    let instante_de_inicio = cabecera("Polling de disponibilidad DB", opciones.quiet);
-    let veredictos_db :Vec<VeredictoDB> = stream::iter(&veredictos).map(db_future).buffer_unordered(cfg.hilos.icmp).collect().await;
-    footer("", opciones.quiet, instante_de_inicio);
-    
-    // Guardado de resultados
-    let instante_de_inicio = cabecera("Guardado de resultados", opciones.quiet);
-    stream::iter(&veredictos_db)
-        .for_each_concurrent(cfg.hilos.backend, |veredicto| async move {
-            info!("{:?}", veredicto);
-            let estado = EstadoDB::new(estampa, veredicto);
-            let envio = enviar_estado_db(&cfg.backend.url_conexion(), estado).await;
-            info!("{:?}", envio);
-        }).await;
-    footer("", opciones.quiet, instante_de_inicio);
-        */
 }
