@@ -59,18 +59,20 @@ pub async fn obtener_objetivos(url_conexion : &str, identificador: Uuid, predete
         }
     });
 
-    let sentencia = "select srv.id, srv.direccion, servicios.icmp, servicios.http, servicios.db, c.intentos, c.timeout 
-	                        from sondas s 
-	                        left join establecimientos e 
-	                        	on s.id = e.sonda_id
-	                        left join servidores srv
-	                        	on e.id = srv.establecimiento_id
-	                        left join cfg_conexion c 
-	                        	on srv.id = c.servidor_id 
-	                        left join servicios 
-	                        	on srv.id = servicios.servidor_id 
-	                        where identificador = $1
-	                        order by srv.id";
+    let sentencia = "select  srv.id, srv.direccion, servicios.icmp, servicios.http, servicios.db, c.intentos, c.timeout 
+                            from sondas s
+                            left join establecimientos e
+                                    on s.id = e.sonda_id
+                            left join disponibilidad d
+                                    on e.id = d.establecimiento_id
+                            right join servidores srv
+                                    on e.id = srv.establecimiento_id
+                            left join cfg_conexion c 
+                                    on srv.id = c.servidor_id 
+                            left join servicios 
+                                    on srv.id = servicios.servidor_id 
+                        where identificador = $1 and habilitado and activo and (horario is null or en_cronograma(horario, LOCALTIMESTAMP) )
+                            order by srv.id;";
     
     Ok(cliente.query(sentencia, &[&identificador]).await?.iter().map(|servidor|{
         Objetivo::new(servidor, &predeterminados)
@@ -89,7 +91,7 @@ pub async fn guardar_resultados_icmp(url_conexion: String, estampa :SystemTime, 
         }
     });
     
-    let sentencia = "insert into disponibilidad_icmp(time, servidor_id, ttl, duracion, arriba) values($1, $2, $3, $4, $5)";
+    let sentencia = "insert into estado_icmp(time, servidor_id, ttl, duracion, arriba) values($1, $2, $3, $4, $5)";
     return  match cliente.execute( sentencia, &[&estampa, &resultado.id, &resultado.ttl, &resultado.duracion, &resultado.arriba ]).await {
         Ok(v) => v,
         Err(_) => 0,
