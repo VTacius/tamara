@@ -1,9 +1,8 @@
 use core::fmt;
 use std::time::Instant;
 use std::net::IpAddr;
-use postgres_types::{FromSql, ToSql};
 
-#[derive(Copy, Clone, Debug, FromSql, ToSql)]
+#[derive(Copy, Clone, Debug)]
 pub struct ResultadoIcmp {
     pub id: i32,
     pub ttl: i16,

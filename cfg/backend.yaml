@@ -1,4 +1,4 @@
-identificador: 1037378b-1542-41cc-b924-5ca7eb036b19 
+identificador: 2922b8ba-4931-4270-8225-84d73012f691 
 api: 
   base_url: "localhost:8080/cartero"
   timeout: 1000
@@ -12,4 +12,4 @@ default_cfg_conexion:
   timeout: 500
 hilos:
   icmp: 50
-  backend: 10
+  backend: 3

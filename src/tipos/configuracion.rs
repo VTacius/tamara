@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use serde::{Serialize as SerdeSerialize, Deserialize as SerdeDeserialize};
 
 // Guarda la información de los parametros de conexión para icmp. Se llena una desde el fichero de configuración como valores por defecto
@@ -17,8 +19,8 @@ pub struct CfgBackend {
     pub dbname: String,
 }
 
-impl CfgBackend {
-    pub fn url_conexion (&self) -> String {
-        format!("host={} user={} password={} dbname={}", self.host, self.usuario, self.password, self.dbname)
+impl Display for CfgBackend {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "postgres://{}:{}@{}/{}", self.usuario, self.password, self.host, self.dbname) 
     }
 }

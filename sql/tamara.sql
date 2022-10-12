@@ -33,7 +33,8 @@ CREATE TABLE sondeos (
 CREATE TABLE establecimientos (
     id serial PRIMARY KEY, 
     nombre varchar(255) UNIQUE,
-    ubicacion POINT,
+    latitud DOUBLE PRECISION,
+    longitud DOUBLE PRECISION,
     sonda_id INTEGER REFERENCES sondas);
 
 CREATE TABLE disponibilidad (
@@ -101,7 +102,7 @@ SELECT create_hypertable('estado_db', 'time', if_not_exists => TRUE);
 insert into sondas(nombre) values('DEFAULT');
 
 -- Crear establecimientos de forma más conveniente
-CREATE OR REPLACE FUNCTION crear_establecimiento(nombre varchar(255), coordenadas POINT=POINT(13.699519907320848, -89.19608845685455), sonda varchar(255) = 'DEFAULT')
+CREATE OR REPLACE FUNCTION crear_establecimiento(nombre varchar(255), latitud DOUBLE PRECISION = 13.699519907320848, longitud DOUBLE PRECISION = -89.19608845685455, sonda varchar(255) = 'DEFAULT')
             RETURNS integer
             LANGUAGE plpgsql AS $$
     DECLARE
@@ -110,7 +111,7 @@ CREATE OR REPLACE FUNCTION crear_establecimiento(nombre varchar(255), coordenada
     BEGIN
     	select id into _sonda_id from sondas as s where s.nombre = sonda;
     	assert not _sonda_id = 0, format('No se encontró la sonda: %s', sonda);
-    	insert into establecimientos(nombre, ubicacion, sonda_id) values(nombre, coordenadas, _sonda_id) returning id into _establecimiento_id;
+    	insert into establecimientos(nombre, latitud, longitud, sonda_id) values(nombre, latitud, longitud, _sonda_id) returning id into _establecimiento_id;
     	insert into disponibilidad(establecimiento_id) values(_establecimiento_id);
     return _establecimiento_id;
     END;

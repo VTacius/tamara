@@ -39,7 +39,7 @@ fn validar_fichero(name: &str) -> Result<(), String> {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Hilos {
     pub icmp: usize,
-    pub backend: usize
+    pub backend: u32
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -57,7 +57,7 @@ pub struct Cfg{
     pub hilos: Hilos
 }
 
-pub fn leer_configuracion_backend(opciones: &Opciones) -> Result<Cfg, OpcionesError> {
+pub fn leer_configuracion(opciones: &Opciones) -> Result<Cfg, OpcionesError> {
     let ruta = format!("{}/backend.yaml", opciones.directorio_configuracion);
     let fichero = File::open(ruta)?;
     let lector = BufReader::new(fichero);

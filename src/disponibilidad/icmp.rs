@@ -2,7 +2,7 @@ use std::time::Duration;
 use futures::{Future, stream, Stream, StreamExt};
 
 use crate::icmp::CheckIcmp;
-use crate::backend::Objetivo;
+use crate::tipos::Objetivo;
 use crate::tipos::ResultadoIcmp;
 
 pub fn implementar_check_icmp(objetivos :Vec<Objetivo>) -> impl Stream<Item = impl Future<Output = ResultadoIcmp>> {

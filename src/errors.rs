@@ -23,6 +23,6 @@ pub enum TamaraBackendError {
     EnvioError {
         #[from]
         #[source]
-        error: ::tokio_postgres::Error
+        error: ::sqlx::Error
     }
 }
