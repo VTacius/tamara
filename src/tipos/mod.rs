@@ -5,3 +5,4 @@ mod backend;
 pub use self::configuracion::{CfgBackend, CfgConexionObjetivos};
 pub use self::icmp::ResultadoIcmp;
 pub use self::backend::Objetivo;
+pub use self::backend::MensajePooling;

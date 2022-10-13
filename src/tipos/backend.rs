@@ -1,3 +1,5 @@
+use uuid::Uuid;
+use serde::Serialize;
 use sqlx::{postgres::PgRow, Row};
 
 use crate::tipos::CfgConexionObjetivos;
@@ -23,5 +25,16 @@ impl Objetivo {
         let cfg_conexion = CfgConexionObjetivos{ intentos, timeout };
         
         Objetivo { id, ip, cfg_conexion }
+    }
+}
+#[derive(Serialize)]
+pub struct MensajePooling {
+    pub uuid: Uuid,
+    pub ts: f64
+}
+
+impl MensajePooling {
+    pub fn new(uuid: Uuid, ts: f64) -> MensajePooling {
+        MensajePooling { uuid, ts }
     }
 }

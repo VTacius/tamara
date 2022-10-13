@@ -12,4 +12,4 @@ default_cfg_conexion:
   timeout: 500
 hilos:
   icmp: 50
-  backend: 3
+  backend: 5

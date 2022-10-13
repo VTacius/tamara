@@ -14,8 +14,9 @@ lazy_static = "1.4.0"
 libc = "0.2.132"
 log = "0.4.17"
 regex = "1.6.0"
-reqwest = "0.11.12"
+reqwest = { version = "0.11.12", features = ["json"] }
 serde = { version = "1.0.144", features = ["derive"] }
+serde_json = "1.0.86"
 serde_yaml = "0.9.13"
 socket2 = { version = "0.4.7", features = ["all"] }
 sqlx = { version = "0.6", features = ["runtime-tokio-native-tls", "postgres", "all-types", "uuid", "chrono"] }

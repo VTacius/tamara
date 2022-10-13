@@ -2,19 +2,19 @@ use chrono::{DateTime, Utc};
 use log::trace;
 use sqlx::postgres::{PgPoolOptions, PgRow};
 use sqlx::{query, Pool, Postgres};
-use std::time::{SystemTime, Duration, UNIX_EPOCH};
+use std::time::Duration;
 
 use uuid::Uuid;
 use futures::{Future, stream, Stream, StreamExt};
 
 use crate::args::Api;
 use crate::errors::TamaraBackendError;
-use crate::tipos::CfgBackend;
+use crate::tipos::{CfgBackend, MensajePooling};
 use crate::tipos::{CfgConexionObjetivos, ResultadoIcmp, Objetivo};
 
 
 // Recupera Vec<Objetivos> desde la base de datos
-pub async fn obtener_objetivos(cfg_conexion : &CfgBackend, identificador: Uuid, predeterminados :CfgConexionObjetivos) -> Result<Vec<Objetivo>, TamaraBackendError> {
+pub async fn operacion_obtener_objetivos(cfg_conexion : &CfgBackend, identificador: Uuid, predeterminados :&CfgConexionObjetivos) -> Result<Vec<Objetivo>, TamaraBackendError> {
 
     let pool = PgPoolOptions::new()
         .max_connections(1)
@@ -69,41 +69,38 @@ pub fn enviar_resultados (estampa: DateTime<Utc>, pool: &Pool<Postgres>, resulta
 }
 
 // Esto también es comunicación con el backend, osea
-
-fn _crear_ts_pg_compatible(estampa: SystemTime) -> f64 {
-    let estampa = estampa.duration_since(UNIX_EPOCH).unwrap().as_nanos();
-    estampa as f64 / 1000000000.0
-}
-
-pub async fn _enviar_aviso_sondeo (api: Api, estampa: SystemTime, uuid: Uuid) -> bool {
-    let ts = _crear_ts_pg_compatible(estampa);
-    let url = format!("http://{}/{}/{}", api.base_url, uuid, ts);
+// http://localhost:8080/cartero/2922b8ba-4931-4270-8225-84d73012f691/1665671190.1424556
+pub async fn enviar_aviso_sondeo (api: &Api, estampa: DateTime<Utc>, uuid: Uuid) -> Result<(), TamaraBackendError> {
+    let ts = estampa.timestamp_nanos() as f64 / 1000000000.0;
+    
+    let url = format!("http://{}/", api.base_url);
+    let mensaje = MensajePooling::new(uuid, ts);
 
     let timeout = Duration::from_millis(api.timeout);
     let redirect = reqwest::redirect::Policy::limited(1);
-    let cliente = match reqwest::Client::builder().connect_timeout(timeout).redirect(redirect).build(){
-        Ok(c) => c,
-        Err(e) => {
-            trace!("{}", e);
-            return false;
+    let cliente = reqwest::Client::builder()
+        .connect_timeout(timeout)
+        .redirect(redirect)
+        .build()?;
+    
+    let respuesta = cliente.post(url).json(&mensaje).send().await?;
 
-        }
-    };
-    let respuesta = match cliente.get(url).send().await{
-        Ok(v) => v,
-        Err(e) => {
-            trace!("{}", e);
-            return false; 
-        }
-    };
-
-    if respuesta.status().as_u16() == 201 {
-        println!("{:?}", respuesta);
-        let cabeceras = respuesta.headers();
-        let uuid_respuesta = cabeceras.get("X-uuid-poller").unwrap();
-        println!("{:?}", uuid_respuesta);
-        return true; 
+    if respuesta.status().as_u16() != 201 {
+        trace!("Respuesta por parte del servidor: {}", respuesta.status().as_u16());
+        return Err(TamaraBackendError::RecepcionWebError);
+    }
+    
+    let uuid_respuesta = match  respuesta.headers().get("X-uuid-poller"){
+        Some(uuid) => uuid,
+        None => {
+            trace!("No se encuentra X-uuid-poller");
+            return Err(TamaraBackendError::RecepcionWebError)
+        },
+    }; 
+    
+    if uuid_respuesta.to_str()? == uuid.to_string() {
+        return Ok(())
     } else {
-        return false;
+        return Err(TamaraBackendError::RecepcionWebError);
     }
 }

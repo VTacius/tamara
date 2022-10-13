@@ -24,5 +24,22 @@ pub enum TamaraBackendError {
         #[from]
         #[source]
         error: ::sqlx::Error
-    }
+    },
+
+    #[error("backend error: {error}")]
+    EnvioWebError {
+        #[from]
+        #[source]
+        error: ::reqwest::Error
+    },
+    
+    #[error("backend recepcion error")]
+    RecepcionWebError, 
+
+    #[error("error formato: {error}")]
+    RecepcionWebFormatoError {
+        #[from]
+        #[source]
+        error: ::reqwest::header::ToStrError
+    },
 }
